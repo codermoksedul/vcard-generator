@@ -246,15 +246,17 @@ function vcard_shortcode($atts) {
     $vcard_data = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE user_id = %d", $user_id), ARRAY_A);
 
     if ($vcard_data) {
-        $output = '<div id="dm_vcard_box">';
+        $output = '<div id="dm_vcard_body">'; // Opening tag for the custom parent div
+
+        $output .= '<div id="dm_vcard_box">';
         // header area start
         $output .= '<div class="dm_header_area" style="background-image: linear-gradient(45deg, #19244cb5, #017ca1c2), url(\'' . esc_url($vcard_data['header_bg_url']) . '\');">';
         $output .= '<div class="dm_logo_box">';
-                // Display logo if available
-                if (!empty($vcard_data['logo_url'])) {
-                    $output .= '<img class="dm_vcard_logo" src="' . esc_url($vcard_data['logo_url']) . '" alt="Logo">';
-                }
-        
+        // Display logo if available
+        if (!empty($vcard_data['logo_url'])) {
+            $output .= '<img class="dm_vcard_logo" src="' . esc_url($vcard_data['logo_url']) . '" alt="Logo">';
+        }
+
         $output .= '</div>';
         // header info box
         $output .= '<div class="dm_header_info_box">';
@@ -262,10 +264,9 @@ function vcard_shortcode($atts) {
         $output .= '<p class="designation">' . esc_html($vcard_data['job_title']) . '</p>';
         $output .= '<p class="short_desc">' . esc_html($vcard_data['short_description']) . '</p>';
         $output .= '</div>';
-        
+
         $output .= '</div>';
         // header area end
-        
         $output .= '<div class="dm_contact_area">';
         $output .= '<ul>';
         // Display phone number if available
@@ -312,8 +313,8 @@ function vcard_shortcode($atts) {
         $output .= '</ul>';
 
         $output .= '</div>';
-        
-        // Display location if available
+
+
         
 
         // Process and display social links with labels as hyperlinks and Font Awesome icons
@@ -349,35 +350,35 @@ function vcard_shortcode($atts) {
         foreach ($social_links as $label => $data) {
             $url = esc_url($data['url']);
             $icon = esc_attr($data['icon']);
-            
-            $output .='<li>';
+
+            $output .= '<li>';
             if (!empty($url)) {
                 $output .= '<a href="' . $url . '" target="_blank"><i class="' . $icon . '"></i></a>';
             }
-            $output .='</li>';
+            $output .= '</li>';
         }
-        $output .='</ul>';
+        $output .= '</ul>';
         $output .= '</div>';
 
-
         // Display QR code if available
-        $output .='<div class="dm_qr_code_area">';
+        $output .= '<div class="dm_qr_code_area">';
         if (!empty($vcard_data['qr_code_url'])) {
             $output .= '<p></p>';
             $output .= "<h4>Scan Me<h4>";
             $output .= '<img src="' . esc_url($vcard_data['qr_code_url']) . '" alt="QR Code">';
             $output .= "<p>Share and install my Card 👉<p>";
-            
-        }
-        $output .='</div>';
 
+        }
         $output .= '</div>';
-        
+
+        $output .= '</div>'; // Closing tag for the custom parent div
+
         return $output;
     } else {
         return 'vCard not found.';
     }
 }
+
 
 add_shortcode('dm_vcard', 'vcard_shortcode');
 
@@ -608,4 +609,3 @@ function get_vcard_data_by_user_id($user_id) {
     
     return $vcard_data;
 }
-
