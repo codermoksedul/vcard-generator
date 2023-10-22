@@ -1,43 +1,49 @@
 jQuery(document).ready(function ($) {
-    $('#select-logo').click(function(e) {
+    // Logo image selection
+    $('#select-logo').on('click', function (e) {
         e.preventDefault();
-
         var image = wp.media({
-            title: 'Upload Logo',
-            multiple: false
-        }).open()
-        .on('select', function(e) {
-            var uploadedImage = image.state().get('selection').first();
-            var image_url = uploadedImage.toJSON().url;
-            $('#logo_id').val(uploadedImage.toJSON().id);
-        });
+            title: 'Select Logo',
+            multiple: false,
+            library: { type: 'image' },
+            button: { text: 'Select' },
+        }).on('select', function () {
+            var attachment = image.state().get('selection').first().toJSON();
+            $('#logo_url').val(attachment.url);
+            // Display the selected image
+            $('#logo_preview').attr('src', attachment.url);
+        }).open();
     });
-    // Handler for the "Select Header Background" button
-    $('#select-header-bg').click(function (e) {
+
+    // Header Background image selection
+    $('#select-header-bg').on('click', function (e) {
         e.preventDefault();
-        selectImage('header_bg_id');
+        var image = wp.media({
+            title: 'Select Header Background',
+            multiple: false,
+            library: { type: 'image' },
+            button: { text: 'Select' },
+        }).on('select', function () {
+            var attachment = image.state().get('selection').first().toJSON();
+            $('#header_bg_url').val(attachment.url);
+            // Display the selected image
+            $('#header_bg_preview').attr('src', attachment.url);
+        }).open();
     });
 
-    // Handler for the "Select QR Code" button
-    $('#select-qr-code').click(function (e) {
+    // QR Code image selection
+    $('#select-qr-code').on('click', function (e) {
         e.preventDefault();
-        selectImage('qr_code_id');
+        var image = wp.media({
+            title: 'Select QR Code',
+            multiple: false,
+            library: { type: 'image' },
+            button: { text: 'Select' },
+        }).on('select', function () {
+            var attachment = image.state().get('selection').first().toJSON();
+            $('#qr_code_url').val(attachment.url);
+            // Display the selected image
+            $('#qr_code_preview').attr('src', attachment.url);
+        }).open();
     });
-
-    function selectImage(targetField) {
-        var customUploader = wp.media({
-            title: 'Select Image',
-            button: {
-                text: 'Use this image'
-            },
-            multiple: false
-        });
-
-        customUploader.on('select', function () {
-            var attachment = customUploader.state().get('selection').first().toJSON();
-            $('#' + targetField).val(attachment.id);
-        });
-
-        customUploader.open();
-    }
 });

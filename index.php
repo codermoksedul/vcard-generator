@@ -405,8 +405,18 @@ function vcard_list_submenu() {
 add_action('admin_menu', 'vcard_list_submenu');
 
 // Callback function for the vCard List submenu page
+// Callback function for the vCard List submenu page
 function vcard_list_page() {
     global $wpdb;
+
+    // Check if a delete request is submitted
+    if (isset($_GET['delete_user_id'])) {
+        $user_id = intval($_GET['delete_user_id']);
+        delete_vcard_data($user_id);
+        // Redirect to the vCard list page to refresh the list after deletion
+        wp_redirect(admin_url('admin.php?page=vcard-list'));
+        exit;
+    }
 
     // Display the list of uploaded vCards in a table
     $vcard_data = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}dm_vcards", ARRAY_A);
@@ -420,7 +430,7 @@ function vcard_list_page() {
     echo '<th>Name</th>';
     echo '<th>Job Title</th>';
     echo '<th>Shortcode</th>';
-    echo '<th>Actions</th>'; // Add this line
+    echo '<th>Actions</th>';
     echo '</tr>';
     echo '</thead>';
     echo '<tbody>';
@@ -438,11 +448,13 @@ function vcard_list_page() {
         echo '<td>' . esc_html($data['job_title']) . '</td>';
         echo '<td>[dm_vcard user_id="' . esc_attr($data['user_id']) . '"]</td>';
         echo '<td>';
-        // Add an "Edit" link for each vCard
         $edit_url = add_query_arg(array('page' => 'vcard-edit', 'user_id' => $data['user_id']), admin_url('admin.php'));
         echo '<a class="button" href="' . esc_url($edit_url) . '">Edit</a>';
-        echo '</td>';
-        // You can add more actions here as needed
+        
+        // Add a "Delete" button to delete vCard
+        $delete_url = add_query_arg(array('page' => 'vcard-list', 'delete_user_id' => $data['user_id']), admin_url('admin.php'));
+        echo '<a class="button" href="' . esc_url($delete_url) . '" onclick="return confirm(\'Are you sure you want to delete this vCard?\');">Delete</a>';
+        
         echo '</td>';
         echo '</tr>';
         $list_number++;
@@ -453,7 +465,17 @@ function vcard_list_page() {
     echo '</div>';
 }
 
-// Modify the vCard Edit Page to Retrieve User ID and Data
+// Function to delete vCard data by user ID
+function delete_vcard_data($user_id) {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'dm_vcards';
+    
+    $wpdb->delete(
+        $table_name,
+        array('user_id' => $user_id)
+    );
+}
+
 function vcard_edit_page() {
     global $wpdb;
 
@@ -465,7 +487,8 @@ function vcard_edit_page() {
             // Display an edit form populated with vCard data
             echo '<div class="edit_box">';
             echo '<h2>Edit vCard</h2>';
-            echo '<form  method="post">';
+            echo '<form method="post" enctype="multipart/form-data">';
+            echo '<div class="edit_main_form">';
             echo '<input type="hidden" name="user_id" value="' . esc_attr($user_id) . '">';
 
             // Add form fields for editing vCard data
@@ -496,7 +519,7 @@ function vcard_edit_page() {
 
             echo '<div>';
             echo '<label for="website_url">Website URL:</label>';
-            echo '<input type="text" name="website_url" id="website_url" value="' . esc_attr($vcard_data['website_url']) . '">';
+            echo '<input type="text" name="website_url" id="website_url" value="' . esc_url($vcard_data['website_url']) . '">';
             echo '</div>';
 
             echo '<div>';
@@ -506,47 +529,66 @@ function vcard_edit_page() {
 
             echo '<div>';
             echo '<label for="facebook_link">Facebook:</label>';
-            echo '<input type="text" name="facebook_link" id="facebook_link" value="' . esc_attr($vcard_data['facebook_link']) . '">';
+            echo '<input type="text" name="facebook_link" id="facebook_link" value="' . esc_url($vcard_data['facebook_link']) . '">';
             echo '</div>';
 
             echo '<div>';
             echo '<label for="twitter_link">Twitter:</label>';
-            echo '<input type="text" name="twitter_link" id="twitter_link" value="' . esc_attr($vcard_data['twitter_link']) . '">';
+            echo '<input type="text" name="twitter_link" id="twitter_link" value="' . esc_url($vcard_data['twitter_link']) . '">';
             echo '</div>';
 
             echo '<div>';
             echo '<label for="instagram_link">Instagram:</label>';
-            echo '<input type="text" name="instagram_link" id="instagram_link" value="' . esc_attr($vcard_data['instagram_link']) . '">';
+            echo '<input type="text" name="instagram_link" id="instagram_link" value="' . esc_url($vcard_data['instagram_link']) . '">';
             echo '</div>';
 
             echo '<div>';
             echo '<label for="linkedin_link">LinkedIn:</label>';
-            echo '<input type="text" name="linkedin_link" id="linkedin_link" value="' . esc_attr($vcard_data['linkedin_link']) . '">';
+            echo '<input type="text" name="linkedin_link" id="linkedin_link" value="' . esc_url($vcard_data['linkedin_link']) . '">';
             echo '</div>';
 
             echo '<div>';
             echo '<label for="youtube_link">YouTube:</label>';
-            echo '<input type="text" name="youtube_link" id="youtube_link" value="' . esc_attr($vcard_data['youtube_link']) . '">';
+            echo '<input type="text" name="youtube_link" id="youtube_link" value="' . esc_url($vcard_data['youtube_link']) . '">';
             echo '</div>';
 
             echo '<div>';
             echo '<label for="whatsapp_link">WhatsApp:</label>';
-            echo '<input type="text" name="whatsapp_link" id="whatsapp_link" value="' . esc_attr($vcard_data['whatsapp_link']) . '">';
+            echo '<input type="text" name="whatsapp_link" id="whatsapp_link" value="' . esc_url($vcard_data['whatsapp_link']) . '">';
             echo '</div>';
 
-            // You can continue adding more fields for other vCard data here
+            echo '<div>';
+echo '<label for="logo_url">Logo:</label>';
+echo '<input type="text" name="logo_url" id="logo_url" value="' . esc_url($vcard_data['logo_url']) . '">';
+echo '<input type="button" class="button" id="select-logo" value="Select Logo">';
+echo '</div>';
+echo '<img id="logo_preview" src="' . esc_url($vcard_data['logo_url']) . '" alt="Logo Preview" style="max-width: 100px;">';
 
+echo '<div>';
+echo '<label for="header_bg_url">Header Background:</label>';
+echo '<input type="text" name="header_bg_url" id="header_bg_url" value="' . esc_url($vcard_data['header_bg_url']) . '">';
+echo '<input type="button" class="button" id="select-header-bg" value="Select Header Background">';
+echo '</div>';
+echo '<img id="header_bg_preview" src="' . esc_url($vcard_data['header_bg_url']) . '" alt="Header Background Preview" style="max-width: 100px;">';
+
+echo '<div>';
+echo '<label for="qr_code_url">QR Code:</label>';
+echo '<input type="text" name="qr_code_url" id="qr_code_url" value="' . esc_url($vcard_data['qr_code_url']) . '">';
+echo '<input type="button" class="button" id="select-qr-code" value="Select QR Code">';
+echo '</div>';
+echo '<img id="qr_code_preview" src="' . esc_url($vcard_data['qr_code_url']) . '" alt="QR Code Preview" style="max-width: 100px;">';
+
+
+            echo '</div>'; // .edit_main_form
+
+            // Add a submit button
             echo '<input type="submit" name="update_vcard" value="Update vCard">';
             echo '</form>';
-            echo '</div>';
-        } else {
-            echo 'vCard not found for editing.';
+            echo '</div>'; // .edit_box
         }
-    } else {
-        echo 'Invalid vCard.';
     }
 }
-// Add this in your plugin file
+
 
 // Action hook for form submission
 add_action('admin_init', 'update_vcard_data');
@@ -556,6 +598,33 @@ function update_vcard_data() {
     if (isset($_POST['update_vcard'])) {
         $user_id = intval($_POST['user_id']);
         $vcard_data = get_vcard_data_by_user_id($user_id);
+
+        // Handle logo upload
+if (!empty($_FILES['logo_upload']['name'])) {
+    $uploaded_logo = wp_handle_upload($_FILES['logo_upload'], array('test_form' => false));
+    if ($uploaded_logo && !isset($uploaded_logo['error'])) {
+        $logo_url = $uploaded_logo['url'];
+        update_vcard_data($user_id, 'logo_url', $logo_url);
+    }
+}
+
+// Handle header background upload
+if (!empty($_FILES['header_bg_upload']['name'])) {
+    $uploaded_header_bg = wp_handle_upload($_FILES['header_bg_upload'], array('test_form' => false));
+    if ($uploaded_header_bg && !isset($uploaded_header_bg['error'])) {
+        $header_bg_url = $uploaded_header_bg['url'];
+        update_vcard_data($user_id, 'header_bg_url', $header_bg_url);
+    }
+}
+
+// Handle QR code upload
+if (!empty($_FILES['qr_code_upload']['name'])) {
+    $uploaded_qr_code = wp_handle_upload($_FILES['qr_code_upload'], array('test_form' => false));
+    if ($uploaded_qr_code && !isset($uploaded_qr_code['error'])) {
+        $qr_code_url = $uploaded_qr_code['url'];
+        update_vcard_data($user_id, 'qr_code_url', $qr_code_url);
+    }
+}
 
         // Check if the vCard data exists
         if ($vcard_data) {
