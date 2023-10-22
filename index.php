@@ -558,26 +558,28 @@ function vcard_edit_page() {
             echo '</div>';
 
             echo '<div>';
-echo '<label for="logo_url">Logo:</label>';
-echo '<input type="text" name="logo_url" id="logo_url" value="' . esc_url($vcard_data['logo_url']) . '">';
-echo '<input type="button" class="button" id="select-logo" value="Select Logo">';
-echo '</div>';
-echo '<img id="logo_preview" src="' . esc_url($vcard_data['logo_url']) . '" alt="Logo Preview" style="max-width: 100px;">';
+            echo '<label for="logo_url">Logo:</label>';
+            echo '<input type="file" name="logo_upload" id="logo_upload">';
+            if (!empty($vcard_data['logo_url'])) {
+                echo '<img src="' . esc_url($vcard_data['logo_url']) . '" alt="Current Logo" width="50" height="50">';
+            }
+            echo '</div>';
 
-echo '<div>';
-echo '<label for="header_bg_url">Header Background:</label>';
-echo '<input type="text" name="header_bg_url" id="header_bg_url" value="' . esc_url($vcard_data['header_bg_url']) . '">';
-echo '<input type="button" class="button" id="select-header-bg" value="Select Header Background">';
-echo '</div>';
-echo '<img id="header_bg_preview" src="' . esc_url($vcard_data['header_bg_url']) . '" alt="Header Background Preview" style="max-width: 100px;">';
+            echo '<div>';
+            echo '<label for="header_bg_url">Header Background:</label>';
+            echo '<input type="file" name="header_bg_upload" id="header_bg_upload">';
+            if (!empty($vcard_data['header_bg_url'])) {
+                echo '<img src="' . esc_url($vcard_data['header_bg_url']) . '" alt="Current Header Background" width="50" height="50">';
+            }
+            echo '</div>';
 
-echo '<div>';
-echo '<label for="qr_code_url">QR Code:</label>';
-echo '<input type="text" name="qr_code_url" id="qr_code_url" value="' . esc_url($vcard_data['qr_code_url']) . '">';
-echo '<input type="button" class="button" id="select-qr-code" value="Select QR Code">';
-echo '</div>';
-echo '<img id="qr_code_preview" src="' . esc_url($vcard_data['qr_code_url']) . '" alt="QR Code Preview" style="max-width: 100px;">';
-
+            echo '<div>';
+            echo '<label for="qr_code_url">QR Code:</label>';
+            echo '<input type="file" name="qr_code_upload" id="qr_code_upload">';
+            if (!empty($vcard_data['qr_code_url'])) {
+                echo '<img src="' . esc_url($vcard_data['qr_code_url']) . '" alt="Current QR Code" width="50" height="50">';
+            }
+            echo '</div>';
 
             echo '</div>'; // .edit_main_form
 
@@ -589,7 +591,60 @@ echo '<img id="qr_code_preview" src="' . esc_url($vcard_data['qr_code_url']) . '
     }
 }
 
+// Add this in your plugin file
+?>
 
+
+<style>
+
+.edit_box {
+  width: 768px;
+  margin: auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+.edit_box h2 {
+    text-align: center;
+    color: $pColor;
+    font-size: 25px;
+    margin-top: 10px;
+    margin-bottom: 40px;
+  }
+.edit_box form .edit_main_form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.edit_box form input {
+  border: 1px solid #0000001c !important;
+  border-radius: 0px !important;
+  padding: 5px 10px !important;
+  outline: none !important;
+  width: 100%;
+}
+.edit_box form label {
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  padding: 2px;
+  color: rgba(0, 0, 0, 0.774);
+}
+.edit_box #submit_btn {
+  background-color: #07a889;
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  padding: 8px 20px;
+  display: inline-block;
+  margin: auto;
+  margin-top: 25px;
+  cursor: pointer;
+}
+
+</style>
+<?php
 // Action hook for form submission
 add_action('admin_init', 'update_vcard_data');
 
@@ -600,32 +655,22 @@ function update_vcard_data() {
         $vcard_data = get_vcard_data_by_user_id($user_id);
 
         // Handle logo upload
-if (!empty($_FILES['logo_upload']['name'])) {
-    $uploaded_logo = wp_handle_upload($_FILES['logo_upload'], array('test_form' => false));
-    if ($uploaded_logo && !isset($uploaded_logo['error'])) {
-        $logo_url = $uploaded_logo['url'];
-        update_vcard_data($user_id, 'logo_url', $logo_url);
-    }
-}
+        if (!empty($_FILES['logo_upload']['name'])) {
+            $logo_url = upload_image($_FILES['logo_upload']);
+            update_vcard_data($user_id, 'logo_url', $logo_url);
+        }
 
-// Handle header background upload
-if (!empty($_FILES['header_bg_upload']['name'])) {
-    $uploaded_header_bg = wp_handle_upload($_FILES['header_bg_upload'], array('test_form' => false));
-    if ($uploaded_header_bg && !isset($uploaded_header_bg['error'])) {
-        $header_bg_url = $uploaded_header_bg['url'];
-        update_vcard_data($user_id, 'header_bg_url', $header_bg_url);
-    }
-}
+        // Handle header background upload
+        if (!empty($_FILES['header_bg_upload']['name'])) {
+            $header_bg_url = upload_image($_FILES['header_bg_upload']);
+            update_vcard_data($user_id, 'header_bg_url', $header_bg_url);
+        }
 
-// Handle QR code upload
-if (!empty($_FILES['qr_code_upload']['name'])) {
-    $uploaded_qr_code = wp_handle_upload($_FILES['qr_code_upload'], array('test_form' => false));
-    if ($uploaded_qr_code && !isset($uploaded_qr_code['error'])) {
-        $qr_code_url = $uploaded_qr_code['url'];
-        update_vcard_data($user_id, 'qr_code_url', $qr_code_url);
-    }
-}
-
+        // Handle QR code upload
+        if (!empty($_FILES['qr_code_upload']['name'])) {
+            $qr_code_url = upload_image($_FILES['qr_code_upload']);
+            update_vcard_data($user_id, 'qr_code_url', $qr_code_url);
+        }
         // Check if the vCard data exists
         if ($vcard_data) {
             // Update the vCard data based on the submitted form values
